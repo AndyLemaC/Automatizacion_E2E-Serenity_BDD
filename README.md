@@ -152,5 +152,3 @@ Para visualizar el resultado completo con capturas y pasos ejecutados.
 
 ---
 
-
-Para visualizar el resultado completo con capturas y pasos ejecutados.
