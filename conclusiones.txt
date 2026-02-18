@@ -1,0 +1,72 @@
+Hallazgos y Conclusiones - Proyecto E2E SauceDemo (Serenity BDD + Screenplay)
+
+Hallazgos
+
+1. Estructura del proyecto con Screenplay
+- El proyecto implementa el patron Screenplay con una separacion clara de responsabilidades:
+  - Tasks: Login, AddProductToCart, ViewCart, CompleteCheckout.
+  - Questions: CartItems, OrderConfirmation.
+  - UI/Targets: LoginPage, InventoryPage, CartPage, CheckoutPage, ConfirmationPage.
+  - Step Definitions: orquestan el flujo funcional en Cucumber.
+- La estructura favorece legibilidad y mantenimiento del flujo E2E de compra en https://www.saucedemo.com/.
+
+2. Configuracion de WebDriver
+- La configuracion del navegador existe en varios puntos:
+  - serenity.properties (driver, timeouts y opciones de Chrome).
+  - com.saucedemo.config.WebDriverConfig.
+  - com.saucedemo.config.SerenityWebDriverConfiguration.
+- Esta duplicidad puede generar inconsistencias o confusion sobre cual configuracion gobierna realmente la ejecucion.
+
+3. Manejo de Targets y consultas
+- El acceso a elementos en Questions esta implementado de forma compatible con Serenity:
+  - CartItems usa Text.ofEach(CartPage.CART_ITEM_NAMES).
+  - OrderConfirmation usa Text.of(ConfirmationPage.CONFIRMATION_HEADER).
+- En las clases UI predomina el uso de locatedBy(), lo cual mantiene consistencia para definir selectores dinamicos y estaticos.
+
+4. Flujo de compra E2E implementado
+- El escenario automatizado cubre el objetivo funcional solicitado:
+  - Autenticacion con credenciales.
+  - Agregar dos productos al carrito.
+  - Visualizar carrito.
+  - Completar checkout.
+  - Validar mensaje final "Thank you for your order!".
+- La prueba usa datos externos desde CSV (Purchase_Data.csv), lo que facilita parametrizacion de ejecucion.
+
+5. Manejo de sincronizacion y estabilidad
+- Se usan esperas explicitas con WaitUntil.the(..., isVisible()), buena practica para reducir flakiness.
+- Tambien hay interacciones via JavaScriptExecutor y navegacion directa por URL en algunas Tasks, lo cual hace la prueba mas sensible a cambios de flujo o validaciones intermedias.
+
+Conclusiones
+
+1. Implementacion Screenplay
+- La arquitectura actual cumple con Screenplay y permite escalar casos de prueba de forma modular.
+- El desacople entre Steps, Tasks, Questions y UI hace el proyecto mantenible para nuevos escenarios de compra.
+
+2. Configuracion tecnica
+- La principal deuda tecnica identificada es la duplicacion de configuracion de WebDriver.
+- Centralizar esta configuracion en un unico punto reducira errores de mantenimiento y mejorara la trazabilidad de fallos.
+
+3. Calidad del flujo E2E
+- El flujo funcional principal de compra en SauceDemo esta cubierto extremo a extremo y validado con aserciones de negocio.
+- Para mayor realismo funcional, conviene priorizar acciones de UI (click en botones Continue/Finish) sobre navegacion directa por URL.
+
+4. Robustez de pruebas
+- El uso de esperas explicitas aporta robustez.
+- Aun asi, depender de clicks via JavaScript puede ocultar problemas de interfaz que un usuario real si experimentaria.
+
+Recomendaciones
+
+1. Centralizar la configuracion de WebDriver
+- Definir una sola estrategia de configuracion (preferiblemente serenity.properties + @Managed) y eliminar clases redundantes si no son necesarias.
+
+2. Fortalecer fidelidad del flujo de usuario
+- Reemplazar navegacion por Open.url(...) en checkout por interacciones reales sobre botones Continue y Finish.
+
+3. Reducir uso de JavaScriptExecutor cuando sea posible
+- Priorizar Click.on(Target) con esperas explicitas para validar comportamiento real de UI.
+
+4. Homogeneizar clases UI
+- Mantener convencion consistente en Page Objects y, si se desea reforzar el patron utilitario, agregar constructores privados en clases solo-estaticas.
+
+5. Mejorar resiliencia ante fallos externos
+- Incorporar manejo de errores transitorios (reintentos acotados, evidencia adicional en capturas/logs) para estabilizar ejecuciones en CI.
